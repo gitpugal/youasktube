@@ -40,10 +40,6 @@ COPY --from=base /app/.env ./.env
 COPY --from=base /app/next.config.* ./      
 COPY --from=base /app/tsconfig.json ./     
 COPY --from=base /app/next-env.d.ts ./     
-COPY --from=base /app/app ./app            
-COPY --from=base /app/pages ./pages        
-COPY --from=base /app/components ./components
-COPY --from=base /app/lib ./lib
 
 # 11. Expose port
 EXPOSE 3000
