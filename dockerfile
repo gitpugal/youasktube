@@ -4,23 +4,23 @@ FROM node:20-alpine AS base
 # 2. Set working directory
 WORKDIR /app
 
-# 3. Install system dependencies for Prisma (for SQLite/PostgreSQL)
+# 3. Install system dependencies (for Prisma + OpenSSL)
 RUN apk add --no-cache openssl
 
-# 4. Copy package files and install all dependencies (including dev)
-COPY package.json package-lock.json* pnpm-lock.yaml* bun.lockb* ./
+# 4. Copy and install dependencies
+COPY package.json package-lock.json* ./
 RUN npm install
 
-# 5. Copy the rest of the app
+# 5. Copy app source
 COPY . .
 
 # 6. Generate Prisma client
 RUN npx prisma generate
 
-# 7. Build the Next.js app
+# 7. Build Next.js app
 RUN npm run build
 
-# 8. Remove dev dependencies to prepare for production
+# 8. Prune dev dependencies
 RUN npm prune --production
 
 # 9. Production image
@@ -28,19 +28,25 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# 10. Copy necessary files and pruned node_modules from base stage
+# 10. Copy production dependencies and build artifacts
 COPY --from=base /app/package.json ./
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/.next ./.next
 COPY --from=base /app/public ./public
 COPY --from=base /app/prisma ./prisma
-COPY --from=base /app/next.config.ts ./
-COPY --from=base /app/next-env.d.ts ./
-COPY --from=base /app/tsconfig.json ./
-COPY --from=base /app/.env ./
+COPY --from=base /app/.env ./.env
 
-# 11. Expose the port the app runs on
+# Also copy config files and source if needed by Next.js runtime
+COPY --from=base /app/next.config.* ./      
+COPY --from=base /app/tsconfig.json ./     
+COPY --from=base /app/next-env.d.ts ./     
+COPY --from=base /app/app ./app            
+COPY --from=base /app/pages ./pages        
+COPY --from=base /app/components ./components
+COPY --from=base /app/lib ./lib
+
+# 11. Expose port
 EXPOSE 3000
 
-# 12. Start the Next.js app
+# 12. Start app
 CMD ["npm", "start"]
