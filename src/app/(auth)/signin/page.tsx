@@ -10,7 +10,7 @@ export default function Login() {
     try {
       const callbackUrl =
         process.env.NODE_ENV === "production"
-          ? "http://localhost:3000/new-chat"
+          ? "http://youasktube.info/new-chat"
           : "http://localhost:3000/new-chat";
 
       const response = await signIn("google", {
