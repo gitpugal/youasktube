@@ -7,9 +7,9 @@ WORKDIR /app
 # 3. Install system dependencies for Prisma (for SQLite/PostgreSQL)
 RUN apk add --no-cache openssl
 
-# 4. Copy package files and install dependencies
+# 4. Copy package files and install all dependencies (including dev)
 COPY package.json package-lock.json* pnpm-lock.yaml* bun.lockb* ./
-RUN npm install --omit=dev
+RUN npm install
 
 # 5. Copy the rest of the app
 COPY . .
@@ -20,12 +20,15 @@ RUN npx prisma generate
 # 7. Build the Next.js app
 RUN npm run build
 
-# 8. Production image
+# 8. Remove dev dependencies to prepare for production
+RUN npm prune --production
+
+# 9. Production image
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Install only production deps
+# 10. Copy necessary files and pruned node_modules from base stage
 COPY --from=base /app/package.json ./
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/.next ./.next
@@ -36,8 +39,8 @@ COPY --from=base /app/next-env.d.ts ./
 COPY --from=base /app/tsconfig.json ./
 COPY --from=base /app/.env ./
 
-# Expose the port the app runs on
+# 11. Expose the port the app runs on
 EXPOSE 3000
 
-# Start the Next.js app
+# 12. Start the Next.js app
 CMD ["npm", "start"]
