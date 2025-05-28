@@ -9,7 +9,7 @@ RUN apk add --no-cache openssl
 
 # 4. Copy package files and install dependencies
 COPY package.json package-lock.json* pnpm-lock.yaml* bun.lockb* ./
-RUN npm install
+RUN npm install --omit=dev
 
 # 5. Copy the rest of the app
 COPY . .
