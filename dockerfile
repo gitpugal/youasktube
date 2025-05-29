@@ -11,7 +11,7 @@ COPY . .
 RUN npm run build
 
 # ✅ DEBUG: List contents of /app to verify .next exists
-RUN echo "Listing /app after build:" && ls -la /app && echo "Listing .next:" && ls -la /app/.next
+RUN ls -la /app/.next
 
 # --- Runner Stage ---
 FROM node:18-alpine AS runner
