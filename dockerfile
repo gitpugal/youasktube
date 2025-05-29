@@ -1,5 +1,5 @@
 # --- Builder Stage ---
-FROM node:18-alpine AS builder
+FROM node:18-bullseye AS builder
 WORKDIR /app
 
 # Install dependencies
@@ -11,35 +11,41 @@ COPY . .
 RUN npm run build
 
 # --- Runner Stage ---
-FROM node:18-alpine AS runner
+FROM node:18-bullseye-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Install required libraries and Chromium with all dependencies
-RUN apk add --no-cache \
+# Install Chromium and all required dependencies
+RUN apt-get update && \
+    apt-get install -y \
     chromium \
-    nss \
-    freetype \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont \
-    udev \
-    bash \
-    dbus \
-    libstdc++ \
-    libx11 \
-    libxcomposite \
-    libxdamage \
-    libxext \
-    libxfixes \
-    libxrandr \
-    libxrender \
-    libxtst
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
+    libglib2.0-0 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libx11-6 \
+    libxcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxrandr2 \
+    libxshmfence1 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Puppeteer settings
+# Puppeteer configuration
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
-    PROTOCOL_TIMEOUT=60000
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
+    PROTOCOL_TIMEOUT=120000
 
 # Copy production build
 COPY --from=builder /app/public ./public
