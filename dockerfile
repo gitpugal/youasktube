@@ -15,9 +15,8 @@ FROM node:18-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# ✅ Install Chromium and required packages
+# ✅ Install required libraries (but not full Chromium)
 RUN apk add --no-cache \
-    chromium \
     nss \
     freetype \
     harfbuzz \
@@ -26,12 +25,8 @@ RUN apk add --no-cache \
     udev \
     bash
 
-# ✅ Set Puppeteer to use system-installed Chromium
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# ✅ Puppeteer settings for @sparticuz/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-
-# ✅ Force Puppeteer to use --no-sandbox globally
-ENV PUPPETEER_ARGS="--no-sandbox --disable-setuid-sandbox"
 
 # Copy production build
 COPY --from=builder /app/public ./public
