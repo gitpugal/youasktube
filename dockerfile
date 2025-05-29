@@ -15,7 +15,7 @@ FROM node:18-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# ✅ Install required libraries (but not full Chromium)
+# Install required libraries and Chromium
 RUN apk add --no-cache \
     nss \
     freetype \
@@ -23,10 +23,12 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont \
     udev \
-    bash
+    bash \
+    chromium
 
-# ✅ Puppeteer settings for @sparticuz/chromium
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+# Puppeteer settings for direct Chromium use
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Copy production build
 COPY --from=builder /app/public ./public
