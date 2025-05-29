@@ -2,8 +2,62 @@ import { NextRequest } from "next/server";
 import { marked } from "marked";
 import puppeteer from "puppeteer";
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+
 function sanitizeFilename(name: string) {
   return name.replace(/[^\w\d_\-\.]/g, "_");
+}
+
+async function generatePDFWithRetry(html: string, retries = MAX_RETRIES) {
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--disable-gpu",
+        "--single-process",
+        "--no-zygote",
+      ],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+      headless: true,
+      protocolTimeout: 0,
+      timeout: 0,
+    });
+
+    const page = await browser.newPage();
+    await page.setDefaultNavigationTimeout(0);
+    await page.setDefaultTimeout(0);
+
+    await page.setContent(html, {
+      waitUntil: "domcontentloaded",
+      timeout: 0,
+    });
+
+    // Add small delay for rendering stability
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: "1cm", right: "1cm", bottom: "1cm", left: "1cm" },
+    });
+
+    await browser.close();
+    return pdfBuffer;
+  } catch (error) {
+    if (browser) {
+      await browser.close().catch(() => {});
+    }
+    if (retries > 0) {
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+      return generatePDFWithRetry(html, retries - 1);
+    }
+    throw error;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -16,7 +70,6 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Simplified HTML template
   const html = `<!DOCTYPE html>
     <html>
       <head>
@@ -30,40 +83,8 @@ export async function POST(req: NextRequest) {
       <body>${marked(markdown)}</body>
     </html>`;
 
-  let browser;
   try {
-    browser = await puppeteer.launch({
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--single-process",
-        "--disable-accelerated-2d-canvas",
-        "--disable-gpu",
-        "--no-zygote",
-      ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-      headless: true,
-      protocolTimeout: 0, // Disable protocol timeout
-      timeout: 0, // Disable operation timeout
-    });
-
-    const page = await browser.newPage();
-    await page.setDefaultNavigationTimeout(0);
-    await page.setDefaultTimeout(0);
-
-    // Use basic content loading
-    await page.setContent(html, {
-      waitUntil: "load",
-      timeout: 0,
-    });
-
-    // Minimal PDF generation
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      margin: { top: "1cm", right: "1cm", bottom: "1cm", left: "1cm" },
-    });
-
+    const pdfBuffer = await generatePDFWithRetry(html);
     const safeFilename = sanitizeFilename(title || "document") + ".pdf";
 
     return new Response(pdfBuffer, {
@@ -74,28 +95,21 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("PDF Generation Critical Error:", {
+    console.error("PDF Generation Failed After Retries:", {
       timestamp: new Date().toISOString(),
       error: error instanceof Error ? error.message : String(error),
-      chromiumPath: process.env.PUPPETEER_EXECUTABLE_PATH,
-      systemResources: {
-        memory: process.memoryUsage(),
-        uptime: process.uptime(),
-      },
+      chromePath: process.env.PUPPETEER_EXECUTABLE_PATH,
     });
+
     return new Response(
       JSON.stringify({
-        error: "PDF generation service unavailable",
-        suggestion: "Please try again or contact support",
+        error: "PDF generation service temporarily unavailable",
+        suggestion: "Please try again later",
       }),
       {
         status: 503,
         headers: { "Content-Type": "application/json" },
       }
     );
-  } finally {
-    if (browser) {
-      await browser.close().catch(() => {});
-    }
   }
 }
