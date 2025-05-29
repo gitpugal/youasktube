@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-const FASTAPI_URL = "http://localhost:8000/chat"; // or your deployed FastAPI URL
+const FASTAPI_URL = `${process.env.NEXT_PUBLIC_API_URL}/chat`; // or your deployed FastAPI URL
 
 export async function POST(req: NextRequest) {
   const body = await req.json();

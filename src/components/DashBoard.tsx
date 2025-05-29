@@ -56,7 +56,9 @@ export default function DashBoard({ id, initialChat }: ChatProps) {
   const [youtubeUrl, setYoutubeUrl] = useState(initialChat.videoUrl || "");
   const [videoId, setVideoId] = useState("");
   const [videoSummary, setVideoSummary]: any = useState({
-    video_content: initialChat.videoSummary,
+    video_content: initialChat.videoSummary
+      .replaceAll("```markdown", "")
+      .replaceAll("```", ""),
     videoTranscript: initialChat.videoTranscript,
     title: initialChat.title, // Optional: fetch title if needed
   });

@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 1: Call the LLM/FastAPI backend
-    const llmResponse = await fetch("http://localhost:8000/transcribe/", {
+    const llmResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transcribe/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         { status: llmResponse.status }
       );
     }
-    const FASTAPI_URL = "http://localhost:8000/chat";
+    const FASTAPI_URL = `${process.env.NEXT_PUBLIC_API_URL}/chat`;
     const data = await llmResponse.json();
     const summary = data.response.video_content;
 
