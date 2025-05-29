@@ -69,17 +69,30 @@ export async function POST(req: NextRequest) {
   let browser;
   try {
     browser = await puppeteer.launch({
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--single-process",
+        "--no-zygote",
+      ],
       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
       headless: true,
-      timeout: 30000,
+      protocolTimeout: 60000,
+      timeout: 60000,
     });
 
     const page = await browser.newPage();
+    await page.setDefaultTimeout(60000);
+    await page.setDefaultNavigationTimeout(60000);
+
     await page.setContent(html, {
-      waitUntil: "networkidle0",
-      timeout: 30000,
+      waitUntil: "domcontentloaded",
+      timeout: 60000,
     });
+
+    // Add small delay to ensure rendering completes
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const pdfBuffer = await page.pdf({
       format: "A4",
@@ -102,21 +115,36 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Detailed PDF generation error:", {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      env: {
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-        skipDownload: process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD,
+    console.error("PDF Generation Failed:", {
+      timestamp: new Date().toISOString(),
+      error:
+        error instanceof Error
+          ? {
+              message: error.message,
+              stack: error.stack,
+              name: error.name,
+            }
+          : error,
+      system: {
+        memory: process.memoryUsage(),
+        uptime: process.uptime(),
       },
     });
-    return new Response(JSON.stringify({ error: "Failed to generate PDF" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        error: "Failed to generate PDF",
+        details: error instanceof Error ? error.message : "Unknown error",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   } finally {
     if (browser) {
-      await browser.close().catch(() => {});
+      await browser
+        .close()
+        .catch((e) => console.error("Browser close error:", e));
     }
   }
 }
