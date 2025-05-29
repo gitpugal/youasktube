@@ -20,6 +20,20 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    // const pdf = await mdToPdf(
+    //   { content: markdown },
+    //   {
+    //     dest: undefined,
+    //     highlight_style: path.resolve(
+    //       process.cwd(),
+    //       "node_modules",
+    //       "highlight.js",
+    //       "styles",
+    //       "github"
+    //     ),
+    //     stylesheet: [],
+    //   }
+    // );
     const pdf = await mdToPdf(
       { content: markdown },
       {
@@ -32,6 +46,12 @@ export async function POST(req: NextRequest) {
           "github"
         ),
         stylesheet: [],
+        launch_options: {
+          executablePath:
+            process.env.PUPPETEER_EXECUTABLE_PATH ||
+            "/usr/bin/chromium-browser",
+          args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        },
       }
     );
 
