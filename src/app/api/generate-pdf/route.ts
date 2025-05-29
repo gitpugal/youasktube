@@ -47,9 +47,7 @@ export async function POST(req: NextRequest) {
         ),
         stylesheet: [],
         launch_options: {
-          executablePath:
-            process.env.PUPPETEER_EXECUTABLE_PATH ||
-            "/usr/bin/chromium-browser",
+          executablePath: "/usr/bin/chromium-browser",
           args: ["--no-sandbox", "--disable-setuid-sandbox"],
         },
       }
