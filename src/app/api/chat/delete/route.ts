@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error in POST /api/chat/de;lete:", error);
+    console.error("Error in POST /api/chat/delete:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
