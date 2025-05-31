@@ -5,8 +5,12 @@ import puppeteer from "puppeteer";
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 
-function sanitizeFilename(name: string) {
-  return name.replace(/[^\w\d_\-\.]/g, "_");
+function sanitizeFilename(name: string): string {
+  return name
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/ /g, "_")
+    .replace(/[^\w\d_.-]/g, "_");
 }
 
 async function generatePDFWithRetry(html: string, retries = MAX_RETRIES) {

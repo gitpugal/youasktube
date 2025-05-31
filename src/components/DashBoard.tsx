@@ -4,10 +4,16 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import UserProfile from "@/components/UserProfile";
 import { useSession } from "next-auth/react";
-import { Loader2 } from "lucide-react";
+import {
+  Loader,
+  Loader2,
+  Loader2Icon,
+  LoaderCircle,
+  LoaderPinwheel,
+} from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { TbFileDownload } from "react-icons/tb";
+import { TbFileDownload, TbLoader, TbLoader2, TbLoader3 } from "react-icons/tb";
 import { useRef } from "react";
 import { SiAuthy } from "react-icons/si";
 import CreditsBadge from "./CreditsBadge";
@@ -89,6 +95,7 @@ export default function DashBoard({ id, initialChat }: ChatProps) {
     setIsLoading(true);
 
     try {
+      setChat((prev: any) => [...prev, { question, answer: "" }]);
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -97,7 +104,7 @@ export default function DashBoard({ id, initialChat }: ChatProps) {
         body: JSON.stringify({
           summary: videoSummary?.videoTranscript,
           question,
-          title: videoSummary?.title ? videoSummary?.title : "",
+          title: videoSummary?.title || "",
           id: id,
           email: session?.user?.email,
         }),
@@ -109,7 +116,16 @@ export default function DashBoard({ id, initialChat }: ChatProps) {
         throw new Error(data?.error || "Failed to get response from server.");
       }
 
-      setChat((prev: any) => [...prev, { question, answer: data.response }]);
+      setChat((prev: any) => {
+        const lastIndex = prev.length - 1;
+        const updatedChat = [...prev];
+        updatedChat[lastIndex] = {
+          ...updatedChat[lastIndex],
+          answer: data.response,
+        };
+        return updatedChat;
+      });
+
       setCredits((prev: number) => prev - 5);
       setCreditsChanged(true);
       setTimeout(() => {
@@ -248,7 +264,11 @@ export default function DashBoard({ id, initialChat }: ChatProps) {
               <div className="flex flex-col md:flex-row justify-start p-4 sm:p-5  gap-3 items-start">
                 <SiAuthy className="text-red-500" size={40} />
                 <div className=" text-white  rounded-xl rounded-tl-none w-fit max-w-full text-sm text-left pt-2">
-                  <MarkdownViewer content={c.answer} />
+                  {c.answer?.length == 0 ? (
+                    <LoaderPinwheel className="animate-spin" />
+                  ) : (
+                    <MarkdownViewer content={c.answer} />
+                  )}
                 </div>
               </div>
             </div>

@@ -28,13 +28,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 1: Call the LLM/FastAPI backend
-    const llmResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transcribe/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ url: videoId }),
-    });
+    const llmResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/transcribe/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: videoId }),
+      }
+    );
 
     if (!llmResponse.ok) {
       return NextResponse.json(
@@ -55,7 +58,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         summary,
         userQuestion:
-          "Generate the raw textual content that will go inside a PDF document summarizing this YouTube video transcript. Do NOT explain anything. Always create the response in visually appealing markdown string format for the PDF.",
+          "Generate a clear, well-organized summary of this YouTube video transcript in professional markdown format. Include:\n\n1. **Title** of the video\n2. A short **introduction** (2–3 sentences)\n3. Key **sections or topics** covered, each with a bolded heading and 2–4 bullet points summarizing the content\n4. A **conclusion** (1–2 lines) summarizing the core takeaway.\n\nDo NOT include code blocks, explanations about markdown, or any references to transcripts or prompts. Just return clean, visually-appealing markdown ready to go into a PDF.",
         title: data.response.title,
       }),
     });
