@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import UserProfile from "@/components/UserProfile";
@@ -15,13 +15,14 @@ import { useDispatch } from "react-redux";
 import { addChatId } from "@/store/chatSlice";
 
 export default function NewChatPage() {
-  const { data: session }: any = useSession();
+  const { data: session, update }: any = useSession();
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [isVideoLocked, setIsVideoLocked] = useState(false);
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [videoId, setVideoId] = useState("");
   const [credits, setCredits] = useState(session?.user?.credits);
   const router = useRouter();
+  const redirected = useRef(false);
   const dispatch = useDispatch();
 
   const extractVideoId = (url: string) => {
@@ -79,6 +80,22 @@ export default function NewChatPage() {
   useEffect(() => {
     setCredits(session?.user?.credits);
   }, [session]);
+  useEffect(() => {
+    if (session?.user && session.user.newChatId && !redirected.current) {
+      redirected.current = true;
+      const newChatId = session.user.newChatId;
+
+      if (newChatId) {
+        router.replace(`/chat/${newChatId}`);
+        update({
+          user: {
+            ...session.user,
+            newChatId: null,
+          },
+        });
+      }
+    }
+  }, [session, router, update]);
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-[#181818] to-[#212121] px-4 py-10 flex flex-col items-center text-white relative">

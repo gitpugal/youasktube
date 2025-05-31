@@ -9,7 +9,7 @@ export default function MarkdownViewer({ content }: { content: string }) {
       remarkPlugins={[remarkGfm]}
       components={{
         h1: ({ node, ...props }) => (
-          <h1 className="text-3xl font-bold mb-4" {...props} />
+          <h1 className="text-lg md:text-3xl font-bold mb-4" {...props} />
         ),
         h2: ({ node, ...props }) => (
           <h2 className="text-2xl font-semibold mb-3" {...props} />
@@ -18,7 +18,7 @@ export default function MarkdownViewer({ content }: { content: string }) {
           <h3 className="text-xl font-semibold mb-2" {...props} />
         ),
         p: ({ node, ...props }) => (
-          <p className="text-base mb-2 leading-relaxed" {...props} />
+          <p className="text-sm md:text-base mb-2 leading-relaxed" {...props} />
         ),
         a: ({ node, ...props }) => (
           <a

@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import rehypeRaw from "rehype-raw";
 import MarkdownViewer from "./MarkdownViewer";
+import SampleChat from "./SampleChat";
 
 type ChatProps = {
   id: string;
@@ -198,6 +199,12 @@ export default function DashBoard({ id, initialChat }: ChatProps) {
 
   return (
     <div className="min-h-screen w-full bg-[#212121] px-2 md:px-4 py-10 relative flex flex-col items-center md:pt-10 pt-20">
+      <div className="md:absolute top-5 left-5 z-10">
+        {initialChat.title ==
+          "The Secrets and Science of Mental Toughness | Joe Risser MD, MPH | TEDxSanDiego" && (
+          <SampleChat />
+        )}
+      </div>
       <div className="fixed top-5 right-5 z-10 flex flex-row md:flex-col items-stretch md:items-end md:justify-center justify-stretch md:gap-0 gap-3">
         <UserProfile session={session} />
         {credits !== undefined && (

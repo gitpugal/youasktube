@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "./ui/button";
 import { signOut } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import { Ellipsis, Trash2Icon } from "lucide-react";
@@ -33,6 +33,7 @@ export function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const dispatch = useDispatch();
+  const sideBarTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -78,7 +79,7 @@ export function AppSidebar() {
   return (
     <Sidebar variant="inset" className="bg-neutral-900 text-white p-2 z-50">
       <SidebarHeader className="flex flex-row items-center justify-between px-3 py-2 pt-5 w-full">
-        <SidebarTrigger className="relative" />
+        <SidebarTrigger className="relative" ref={sideBarTriggerRef} />
         <a href="/new-chat" className="w-6 h-6 text-white opacity-70">
           <img src="/new-chat.svg" alt="New Chat" />
         </a>
@@ -99,7 +100,12 @@ export function AppSidebar() {
                 key={chat.id}
               >
                 <button
-                  onClick={() => router.push(`/chat/${chat.id}`)}
+                  onClick={() => {
+                    if (sideBarTriggerRef.current && window.innerWidth < 700) {
+                      sideBarTriggerRef.current.click();
+                    }
+                    router.push(`/chat/${chat.id}`);
+                  }}
                   className="w-10/12 cursor-pointer text-left"
                 >
                   <span className="block w-full truncate text-ellipsis whitespace-nowrap">
